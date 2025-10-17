@@ -133,6 +133,7 @@ ul {
     min-height: 100vh; /* occupe toute la hauteur de l’écran */
     margin: 0;
     padding: 0;
+    font-size: 18px;
 }
 
 
