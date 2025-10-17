@@ -4,10 +4,13 @@
     <meta charset="UTF-8">
     <title>Météo Détaillée</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
+<meta name="theme-color" content="#6dd5fa">
+
 </head>
 <body>
     <div class="container">
-        <h1>🌤 Application Météo Détaillée</h1>
+        <h1>🌤Météo</h1>
 
         <!-- Formulaire -->
         <form method="POST">
@@ -70,6 +73,19 @@
             details.style.display = "none";
         }
     }
+
+    
+if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('{{ url_for("static", filename="service-worker.js") }}')
+    .then(function(registration) {
+        console.log('Service Worker enregistré avec succès:', registration.scope);
+    }).catch(function(error) {
+        console.log('Échec de l\'enregistrement du Service Worker:', error);
+    });
+}
+
+
+
     </script>
 
 </body>

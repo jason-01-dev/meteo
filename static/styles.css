@@ -119,9 +119,22 @@ ul {
 /* Responsive */
 @media (max-width: 768px) {
     .meteo-block {
-        flex-direction: column;
-        align-items: center;
-    }
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+
+    body {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh; /* occupe toute la hauteur de l’écran */
+    margin: 0;
+    padding: 0;
+}
+
 
     .city-photo {
         margin-left: 0;
