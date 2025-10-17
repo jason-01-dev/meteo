@@ -5,10 +5,10 @@ from datetime import datetime
 app = Flask(__name__)
 
 # ----- CLÉS API (inchangées) -----
-# Clé Unsplash pour les photos de ville
+# Clé Unsplash pour les photos de ville (doit être externalisée pour la production !)
 UNSPLASH_ACCESS_KEY = "e8Fx9xicMnQVZekwHWvu3f9bVMPfRqthth9q-juQxRg"
 
-# ⚠️ FONCTIONS GÉOGRAPHIQUES MISE À JOUR : Récupère le pays ET l'altitude ⚠️
+# ⚠️ FONCTION GÉOGRAPHIQUE MISE À JOUR : Récupère le pays ET l'altitude ⚠️
 def get_city_info(ville):
     """Récupère le nom de la ville, le pays et l'altitude pour l'affichage."""
     
@@ -65,9 +65,8 @@ def get_city_info(ville):
     return city_display_name, city_name_for_image, altitude
 
 
-# ----- FONCTIONS EXISTANTES (Alertes et Images) -----
+# ----- FONCTIONS D'ALERTE ET D'IMAGE (inchangées) -----
 
-# ... (get_seismic_alert, get_severe_weather_alert, get_city_image restent inchangées) ...
 def get_seismic_alert():
     """Récupère la dernière alerte de séisme majeure (M > 4.5) de l'USGS."""
     url = "https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/4.5_day.geojson"
@@ -105,7 +104,7 @@ def get_seismic_alert():
     return {"seisme": None, "tsunami": None}
 
 def get_severe_weather_alert():
-    """Simule la récupération d'une alerte météo sévère."""
+    """Simule la récupération d'une alerte météo sévère. (À compléter par une vraie API)"""
     return None 
 
 def get_city_image(ville):
@@ -119,7 +118,6 @@ def get_city_image(ville):
     except requests.exceptions.RequestException:
         pass
     return "{{ url_for('static', filename='placeholder.png') }}"
-# ... (Fin des fonctions existantes) ...
 
 
 # ----- ROUTE PRINCIPALE MISE À JOUR -----
@@ -151,20 +149,29 @@ def index():
             response.raise_for_status() 
             data = response.json()
             
+            # NOUVEAU : Récupérer la Probabilité de Précipitation de la première heure
+            # Cela correspond au risque de pluie "actuel" ou le plus imminent.
+            hourly_data = data['weather'][0]['hourly'][0]
+            chance_of_rain = hourly_data.get('chanceofrain', 'N/A') + "%"
+            
             # Traitement des données wttr.in
             current = data['current_condition'][0]
             meteo_actuelle = f"{current['FeelsLikeC']}°C, {current['weatherDesc'][0]['value']}"
+            
+            # Dictionnaire DETAILS mis à jour
             details = {
+                "Prob. Précipitation": chance_of_rain, # <- NOUVEAU
                 "Humidité": current['humidity'] + "%",
                 "Vent": f"{current['windspeedKmph']} km/h {current['winddir16Point']}",
                 "Pression": current['pressure'] + " hPa",
                 "UV": current['uvIndex'],
                 "Visibilité": current['visibility'] + " km",
-                "Altitude": altitude_value # NOUVEAU : Ajout de l'altitude
+                "Altitude": altitude_value                  # <- MIS À JOUR
             }
             
+            # Prévisions pour les 3 prochains jours
             for jour in data['weather'][:3]:
-                # ... (Les prévisions restent inchangées) ...
+                # On utilise la 4ème heure du jour pour une prévision de mi-journée
                 prevision.append({
                     "date": jour['date'],
                     "max_temp": jour['maxtempC'],
@@ -175,10 +182,11 @@ def index():
                     "uv_index": jour['hourly'][4]['uvIndex']
                 })
                 
-        except (requests.exceptions.RequestException, KeyError, IndexError):
-            meteo_actuelle = "Ville non trouvée ou erreur de données. Réessayez."
+        except (requests.exceptions.RequestException, KeyError, IndexError) as e:
+            print(f"Erreur de récupération météo: {e}")
+            meteo_actuelle = "Ville non trouvée ou erreur de données. Réessayons."
 
-    # 3. Rendu du template avec toutes les données
+    # 3. Rendu du template
     return render_template(
         "index_detailed.html",
         ville=ville, 
@@ -192,4 +200,5 @@ def index():
     )
 
 if __name__ == "__main__":
+    # N'oubliez pas de mettre debug=False et d'utiliser un serveur WSGI en production.
     app.run(host="0.0.0.0", port=5000, debug=True)

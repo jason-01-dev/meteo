@@ -222,6 +222,36 @@ ul li {
     margin-bottom: 8px;
 }
 
+/* ========================================================================= */
+/* MISE EN ÉVIDENCE DES DONNÉES CLÉS (ex: Probabilité de Précipitation) */
+/* ========================================================================= */
+
+/* Mise en évidence spécifique de la probabilité de précipitation */
+/* Ceci cible la première entrée (Prob. Précipitation) dans le dictionnaire 'details' */
+.meteo-info ul li:nth-child(1) { 
+    background: rgba(41, 128, 185, 0.8); /* Bleu océan */
+    border: 1px solid #74b9ff;
+    border-radius: 8px;
+    padding: 10px;
+    font-size: 1.1em;
+    font-weight: bold;
+    color: #fff;
+    text-shadow: 1px 1px 1px rgba(0,0,0,0.5);
+    margin-bottom: 15px; /* Sépare-le des autres détails */
+    list-style-type: '🌧️'; /* Nouvelle icône pour la pluie */
+    animation: fade-highlight 2s infinite alternate; /* Ajout d'une petite animation */
+}
+
+/* On s'assure que le contenu du Prob. Précipitation (le pourcentage) est en gras */
+.meteo-info ul li:nth-child(1) strong {
+    color: #ffeaa7; /* Jaune clair pour la valeur */
+}
+
+@keyframes fade-highlight {
+    from { background: rgba(41, 128, 185, 0.8); }
+    to { background: rgba(52, 152, 219, 0.9); }
+}
+
 /* Prévisions */
 .previsions {
     display: flex;
@@ -309,7 +339,15 @@ ul li {
     border-radius: 10px;
     border-left: 5px solid #f39c12;
     transition: all 0.5s;
+    opacity: 0;
+    transform: translateY(10px);
 }
+
+.explanation-box.visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
 
 .explanation-box h4 {
     margin-top: 0;
@@ -367,8 +405,14 @@ ul li {
     ul {
         padding-left: 0;
         text-align: left;
+        /* Sur mobile, on veut que chaque élément soit sur une ligne */
+        display: block; 
     }
     
+    .meteo-info ul li:nth-child(1) { 
+        margin-bottom: 20px; /* Plus d'espace pour l'alerte pluie sur mobile */
+    }
+
     /* Explications */
     .explications-elements li {
         display: block; /* Liens en colonne */
