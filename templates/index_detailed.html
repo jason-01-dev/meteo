@@ -3,16 +3,29 @@
 <head>
     <meta charset="UTF-8">
     <title>Météo Détaillée</title>
+    
+    <!-- CSS -->
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
-    <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
-<meta name="theme-color" content="#6dd5fa">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+    <!-- Manifest PWA -->
+    <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
+    <meta name="theme-color" content="#6dd5fa">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- iOS PWA support -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Météo">
+    <link rel="apple-touch-icon" href="{{ url_for('static', filename='icons/icon-192.png') }}">
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='icons/icon-32.png') }}">
+    <link rel="icon" type="image/png" sizes="512x512" href="{{ url_for('static', filename='icons/icon-512.png') }}">
 
 </head>
 <body>
     <div class="container">
-        <h1>🌤Météo</h1>
+        <h1>🌤 Météo</h1>
 
         <!-- Formulaire -->
         <form method="POST">
@@ -35,7 +48,6 @@
                     </ul>
                 </div>
 
-                <!-- Photo de la ville -->
                 <div class="city-photo">
                     <img src="{{ city_image_url }}" alt="Photo de {{ ville }}">
                 </div>
@@ -66,29 +78,23 @@
 
     </div>
 
+    <!-- Scripts -->
     <script>
+    // Afficher ou cacher les détails des prévisions
     function toggleDetails(index) {
         const details = document.getElementById('details-' + index);
-        if(details.style.display === "none") {
-            details.style.display = "block";
-        } else {
-            details.style.display = "none";
-        }
+        details.style.display = (details.style.display === "none") ? "block" : "none";
     }
 
-    
-if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('{{ url_for("static", filename="service-worker.js") }}')
-    .then(function(registration) {
-        console.log('Service Worker enregistré avec succès:', registration.scope);
-    }).catch(function(error) {
-        console.log('Échec de l\'enregistrement du Service Worker:', error);
-    });
-}
-
-
-
+    // Enregistrement du service worker
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('{{ url_for("static", filename="service-worker.js") }}')
+        .then(function(registration) {
+            console.log('Service Worker enregistré avec succès:', registration.scope);
+        }).catch(function(error) {
+            console.log('Échec de l\'enregistrement du Service Worker:', error);
+        });
+    }
     </script>
-
 </body>
 </html>
