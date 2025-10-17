@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Météo Détaillée</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>🌤 Application Météo Détaillée</h1>
+
+        <!-- Formulaire -->
+        <form method="POST">
+            <input type="text" name="ville" placeholder="Entrez une ville" required>
+            <button type="submit">Obtenir la météo</button>
+        </form>
+
+        {% if meteo_actuelle %}
+        <div class="result">
+
+            <!-- Bloc météo + photo -->
+            <div class="meteo-block">
+                <div class="meteo-info">
+                    <h2>Météo actuelle pour {{ ville }}</h2>
+                    <p class="meteo">{{ meteo_actuelle }}</p>
+                    <ul>
+                        {% for key, value in details.items() %}
+                            <li><strong>{{ key }}:</strong> {{ value }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+
+                <!-- Photo de la ville -->
+                <div class="city-photo">
+                    <img src="{{ city_image_url }}" alt="Photo de {{ ville }}">
+                </div>
+            </div>
+
+            <!-- Prévisions 3 jours avec détails au clic -->
+            <h2>Prévisions 3 jours</h2>
+            <div class="previsions">
+                {% for jour in prevision %}
+                <div class="jour" onclick="toggleDetails({{ loop.index0 }})">
+                    <h3>{{ jour.date }}</h3>
+                    <p><strong>Condition:</strong> {{ jour.condition }}</p>
+                    <div class="jour-details" id="details-{{ loop.index0 }}" style="display:none;">
+                        <p><strong>Max:</strong> {{ jour.max_temp }}°C</p>
+                        <p><strong>Min:</strong> {{ jour.min_temp }}°C</p>
+                        <p><strong>Vent:</strong> {{ jour.vent }}</p>
+                        <p><strong>Humidité:</strong> {{ jour.humidite }}</p>
+                        <p><strong>UV:</strong> {{ jour.uv_index }}</p>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+        </div>
+        {% else %}
+        <p>Entrez une ville pour voir la météo détaillée.</p>
+        {% endif %}
+
+    </div>
+
+    <script>
+    function toggleDetails(index) {
+        const details = document.getElementById('details-' + index);
+        if(details.style.display === "none") {
+            details.style.display = "block";
+        } else {
+            details.style.display = "none";
+        }
+    }
+    </script>
+
+</body>
+</html>
