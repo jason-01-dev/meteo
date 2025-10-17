@@ -2,47 +2,70 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Météo Détaillée</title>
-    
-    <!-- CSS -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <title>Météo Détaillée et Alertes | Pro</title>
 
-    <!-- Manifest PWA -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
     <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
     <meta name="theme-color" content="#6dd5fa">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <!-- iOS icons -->
-<link rel="apple-touch-icon" sizes="180x180" href="{{ url_for('static', filename='icons/icon-180.png') }}">
-<link rel="apple-touch-icon" sizes="152x152" href="{{ url_for('static', filename='icons/icon-152.png') }}">
-<link rel="apple-touch-icon" sizes="120x120" href="{{ url_for('static', filename='icons/icon-120.png') }}">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <!-- iOS PWA support -->
+    <link rel="apple-touch-icon" sizes="180x180" href="{{ url_for('static', filename='icons/icon-180.png') }}">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="Météo">
-    <link rel="apple-touch-icon" href="{{ url_for('static', filename='icons/icon-192.png') }}">
-
-    <!-- Favicon -->
+    <meta name="apple-mobile-web-app-title" content="Météo Pro">
     <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='icons/icon-32.png') }}">
-    <link rel="icon" type="image/png" sizes="512x512" href="{{ url_for('static', filename='icons/icon-512.png') }}">
 
 </head>
 <body>
     <div class="container">
-        <h1>🌤 Météo</h1>
+        <h1>🌤 Météo & Alertes Sécurité Nationale</h1>
 
-        <!-- Formulaire -->
+        <div id="alerts-section">
+            
+            {% if alerte_tsunami %}
+            <div class="alert alert-warning" role="alert">
+                <h3>🌊 ALERTE TSUNAMI (Niveau: {{ alerte_tsunami.niveau }})</h3>
+                <p><strong>Zones de risque:</strong> {{ alerte_tsunami.zones }}</p>
+                <p><strong>Conseil:</strong> **{{ alerte_tsunami.conseil }}**</p>
+                <p class="alert-link-row">
+                    → <a href="{{ alerte_tsunami.lien_details }}" target="_blank" rel="noopener noreferrer">Consulter le bulletin d'alerte</a>
+                </p>
+            </div>
+            {% endif %}
+            
+            {% if alerte_seisme %}
+            <div class="alert alert-danger" role="alert">
+                <h3>🚨 ALERTE SÉISME (Magnitude: {{ alerte_seisme.magnitude }})</h3>
+                <p><strong>Localisation:</strong> {{ alerte_seisme.lieu }}</p>
+                <p><strong>Heure de l'événement:</strong> {{ alerte_seisme.heure }} UTC</p>
+                <p class="alert-link-row">
+                    → <a href="{{ alerte_seisme.lien_details }}" target="_blank" rel="noopener noreferrer">Consulter les détails officiels USGS</a>
+                </p>
+            </div>
+            {% endif %}
+
+            {% if alerte_meteo_severe %}
+            <div class="alert alert-info" role="alert">
+                <h3>⚠️ ALERTE MÉTÉO SÉVÈRE : {{ alerte_meteo_severe.type_alerte | upper }}</h3>
+                <p><strong>Description:</strong> {{ alerte_meteo_severe.description }}</p>
+                <p><strong>Période:</strong> {{ alerte_meteo_severe.zones_temporelles }}</p>
+                <p><strong>Émetteur:</strong> {{ alerte_meteo_severe.niveau }}</p>
+            </div>
+            {% endif %}
+
+            {% if not alerte_seisme and not alerte_tsunami and not alerte_meteo_severe %}
+                <p class="no-alert">✅ **Aucune alerte géophysique ou météo sévère majeure en cours.**</p>
+            {% endif %}
+        </div>
+
         <form method="POST">
-            <input type="text" name="ville" placeholder="Entrez une ville" required>
+            <input type="text" name="ville" placeholder="Entrez une ville (ex: Paris, Tokyo)" required>
             <button type="submit">Obtenir la météo</button>
         </form>
 
         {% if meteo_actuelle %}
         <div class="result">
 
-            <!-- Bloc météo + photo -->
             <div class="meteo-block">
                 <div class="meteo-info">
                     <h2>Météo actuelle pour {{ ville }}</h2>
@@ -59,16 +82,15 @@
                 </div>
             </div>
 
-            <!-- Prévisions 3 jours avec détails au clic -->
             <h2>Prévisions 3 jours</h2>
             <div class="previsions">
                 {% for jour in prevision %}
                 <div class="jour" onclick="toggleDetails({{ loop.index0 }})">
                     <h3>{{ jour.date }}</h3>
                     <p><strong>Condition:</strong> {{ jour.condition }}</p>
+                    <p class="temp-summary">Max: {{ jour.max_temp }}°C | Min: {{ jour.min_temp }}°C</p>
                     <div class="jour-details" id="details-{{ loop.index0 }}" style="display:none;">
-                        <p><strong>Max:</strong> {{ jour.max_temp }}°C</p>
-                        <p><strong>Min:</strong> {{ jour.min_temp }}°C</p>
+                        <hr>
                         <p><strong>Vent:</strong> {{ jour.vent }}</p>
                         <p><strong>Humidité:</strong> {{ jour.humidite }}</p>
                         <p><strong>UV:</strong> {{ jour.uv_index }}</p>
@@ -79,17 +101,115 @@
 
         </div>
         {% else %}
-        <p>Entrez une ville pour voir la météo détaillée.</p>
+        <p class="placeholder-text">Entrez une ville pour voir la météo détaillée et les prévisions à 3 jours.</p>
         {% endif %}
+        
+        <hr>
+
+        <div class="explications-elements">
+            <h2>En savoir plus sur les éléments 🔬</h2>
+            <p>Comprenez mieux les phénomènes et sachez comment réagir :</p>
+            <ul>
+                <li><a href="#" onclick="showElementExplanation('seismes')">Les **Séismes** : Mesure, Origines et **Sécurité**</a></li>
+                <li><a href="#" onclick="showElementExplanation('tsunami')">Les **Tsunamis** : Formation et Procédures d'Évacuation</a></li>
+                <li><a href="#" onclick="showElementExplanation('meteo_severe')">La **Météo Sévère** : Types d'Alertes et Réaction</a></li>
+                <li><a href="#" onclick="showElementExplanation('uv_index')">L'**Indice UV** : Risque Solaire et Protection</a></li>
+                <li><a href="#" onclick="showElementExplanation('vent')">Le Vent : Vitesse, Échelle de Beaufort</a></li>
+                <li><a href="#" onclick="showElementExplanation('humidite')">L'Humidité : Point de Rosée et Saturation</a></li>
+            </ul>
+
+            <div id="explanation-content" class="explanation-box">
+                <p>Sélectionnez un événement ou un indice pour une explication détaillée et des conseils professionnels.</p>
+            </div>
+        </div>
 
     </div>
 
-    <!-- Scripts -->
     <script>
-    // Afficher ou cacher les détails des prévisions
+    
+    // Fonction d'affichage des détails de prévision
     function toggleDetails(index) {
         const details = document.getElementById('details-' + index);
-        details.style.display = (details.style.display === "none") ? "block" : "none";
+        const parent = details.parentElement;
+        if (details.style.display === "none" || details.style.display === "") {
+            details.style.display = "block";
+            parent.classList.add('active-day'); 
+        } else {
+            details.style.display = "none";
+            parent.classList.remove('active-day');
+        }
+    }
+
+    // Fonction d'affichage des explications détaillées et conseils
+    function showElementExplanation(element) {
+        const explanationBox = document.getElementById('explanation-content');
+        let content = '';
+
+        if (element === 'seismes') {
+            content = `
+                <h4>🚨 Séismes : Mesure, Origines et Sécurité</h4>
+                <p><strong>Explication:</strong> Un séisme est causé par la rupture soudaine des roches dans la croûte terrestre, le long de failles. L'énergie libérée se propage sous forme d'ondes. Il est mesuré selon deux échelles : l'**échelle de magnitude** (Moment) qui quantifie l'énergie à la source, et l'**échelle d'intensité** (Mercalli) qui évalue les effets et les dommages.</p>
+                <p><strong>Conseils de Sécurité:</strong></p>
+                <ul>
+                    <li>**À l'intérieur:** *DROP, COVER, HOLD ON*. Se baisser, se mettre à l'abri sous un meuble solide (table/bureau), et s'y agripper jusqu'à ce que les secousses cessent.</li>
+                    <li>**À l'extérieur:** S'éloigner des bâtiments, des lignes électriques et des arbres. Se mettre à découvert.</li>
+                </ul>
+            `;
+        } else if (element === 'tsunami') {
+            content = `
+                <h4>🌊 Tsunamis : Formation et Procédures d'Évacuation</h4>
+                <p><strong>Explication:</strong> Un tsunami est une série de vagues océaniques géantes provoquées principalement par un séisme sous-marin. Contrairement aux vagues normales, l'énergie d'un tsunami traverse toute la colonne d'eau. Un retrait soudain de la mer est un signe d'alerte naturelle.</p>
+                <p><strong>Conseils de Sécurité:</strong></p>
+                <ul>
+                    <li>Si vous ressentez un séisme fort près de la côte, **évacuez immédiatement** vers l'intérieur des terres ou en hauteur (minimum 10 étages).</li>
+                    <li>La menace peut durer plusieurs heures. **Ne jamais retourner sur la côte** tant que les autorités n'ont pas levé l'alerte.</li>
+                </ul>
+            `;
+        } else if (element === 'meteo_severe') {
+            content = `
+                <h4>⚠️ Météo Sévère : Types d'Alertes et Réaction</h4>
+                <p><strong>Explication:</strong> Les alertes météo sévères (orages violents, crues, vents extrêmes, etc.) sont émises pour signaler un danger imminent ou en cours. La gravité est souvent codifiée (ex: Vert, Jaune, Orange, Rouge) pour indiquer la vigilance requise.</p>
+                <p><strong>Conseils de Réaction (Général):</strong></p>
+                <ul>
+                    <li>**Suivre les instructions** des autorités locales. Sécuriser les objets extérieurs (mobilier de jardin, poubelles) qui pourraient être emportés par le vent.</li>
+                    <li>**Inondations:** Ne jamais tenter de traverser une zone inondée, ni à pied, ni en voiture. Chercher refuge en hauteur.</li>
+                </ul>
+            `;
+        } else if (element === 'uv_index') {
+            content = `
+                <h4>☀️ L\'Indice UV (Ultraviolet) : Risque Solaire et Protection</h4>
+                <p><strong>Explication:</strong> L'Indice UV mesure l'intensité du rayonnement ultraviolet solaire au niveau du sol. Il est classé de **0 (risque faible)** à **11+ (risque extrême)**. Il est crucial pour indiquer le risque de dommages cutanés et oculaires.</p>
+                <p><strong>Conseils de Protection (Selon l'indice):</strong></p>
+                <ul>
+                    <li>**UV ≥ 3:** Porter un chapeau et des lunettes de soleil. Chercher l'ombre.</li>
+                    <li>**UV ≥ 6:** Protection solaire (FPS 30+) obligatoire. Vêtements longs, exposition réduite.</li>
+                    <li>**UV ≥ 8:** Rester à l'intérieur ou à l'ombre totale aux heures de pointe. Protection maximale requise.</li>
+                </ul>
+            `;
+        } else if (element === 'vent') {
+            content = `
+                <h4>💨 Le Vent : Vitesse, Échelle de Beaufort et Impact</h4>
+                <p><strong>Explication:</strong> Le vent est le mouvement d'air causé par les différences de pression atmosphérique. L'**échelle de Beaufort** (0 à 12) est couramment utilisée pour décrire les effets du vent. Un vent est considéré comme fort (coup de vent) à partir de 62 km/h (Force 8).</p>
+                <p><strong>Conseils (Vent Fort):</strong></p>
+                <ul>
+                    <li>**En ville:** S'éloigner des arbres et des structures fragiles. Se méfier des chutes d'objets (tuiles, panneaux).</li>
+                    <li>**Conduite:** Réduire la vitesse. Le vent peut déporter les véhicules, soyez prudent sur les ponts et les zones dégagées.</li>
+                </ul>
+            `;
+        } else if (element === 'humidite') {
+            content = `
+                <h4>💧 L\'Humidité : Point de Rosée et Saturation</h4>
+                <p><strong>Explication:</strong> L'humidité relative est le pourcentage de vapeur d'eau dans l'air. Le **point de rosée** est la température à laquelle l'air doit être refroidi pour que l'eau se condense (brouillard, nuages, rosée). Un point de rosée élevé (proche de la température de l'air) signifie un risque accru de brume et une sensation d'étouffement.</p>
+                <p><strong>Impact:</strong></p>
+                <ul>
+                    <li>**Point de Rosée élevé (20°C+):** L'air est lourd et inconfortable, mauvaise évaporation de la transpiration.</li>
+                    <li>**Point de Rosée bas (0°C-):** L'air est sec, agréable mais peut causer des irritations (yeux, gorge).</li>
+                </ul>
+            `;
+        }
+
+        explanationBox.innerHTML = content;
+        explanationBox.classList.add('visible');
     }
 
     // Enregistrement du service worker
